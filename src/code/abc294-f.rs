@@ -3,6 +3,36 @@
 use proconio::input;
 use proconio::fastout;
 
+use std::cmp::Ordering;
+fn bisect_left<T: PartialOrd>(vec: &[T], v: &T) -> usize {
+    vec.binary_search_by(|x| {
+        if x < v {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        }
+    }).unwrap_or_else(|x| x)
+}
+
+#[allow(non_snake_case)]
+fn f(x: f64, K: usize, N: usize, A: &Vec<f64>, B: &Vec<f64>, M: usize, C: &Vec<f64>, D: &Vec<f64>) -> bool {
+    let mut vec = Vec::new();
+    for i in 0..N {
+        vec.push(A[i] - (B[i] * x / (1. - x)));
+    }
+    vec.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let mut cnt = 0;
+    for i in 0..M {
+        let w = C[i] - (D[i] * x / (1. - x));
+        let idx = bisect_left(&vec, &-w);
+        cnt +=  N - idx;
+    }
+    if cnt >= K {
+        return true;
+    }
+    return false;
+}
+
 #[fastout]
 #[allow(non_snake_case)]
 fn main() {
@@ -35,21 +65,7 @@ fn main() {
     let mut ng = 1.;
     for _ in 0..100 {
         let x = (ok + ng) / 2.;
-        let mut v = Vec::new();
-        for i in 0..N {
-            v.push(A[i] - (B[i] * x / (1. - x)));
-        }
-        v.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let mut cnt = 0;
-        for i in 0..M {
-            let w = C[i] - (D[i] * x / (1. - x));
-            let idx = match v.binary_search_by(|x| x.partial_cmp(&-w).unwrap()) {
-                Ok(v) => v,
-                Err(v) => v,
-            };
-            cnt +=  N - idx;
-        }
-        if K <= cnt {
+        if f(x, K, N, &A, &B, M, &C, &D) {
             ok = x;
         }
         else {
